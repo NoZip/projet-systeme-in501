@@ -12,8 +12,8 @@
  * caractère nul. Les valeurs numériques (file_size par exemple)
  * sont écrits en octal. Ainsi 1024 sera écrit: 2000. Les noms des
  * entrées sont ecrits selon la structure suivante:
- *  - dossier_racine/sous_dossier/.../dossier/ pour les dossiers.
- *  - dossier_racine/sous_dossier/.../dossier/fichier pour un fichier.
+ *  - "dossier_racine/sous_dossier/.../dossier/" pour les dossiers.
+ *  - "dossier_racine/sous_dossier/.../dossier/fichier" pour un fichier.
  *
  * @note Pour l'instant, on est pas obligé de traiter tous les champs.
  */
@@ -29,6 +29,8 @@ struct Header {
     char linked_file_name[100] ///< Si le fichier est un lien, Le nom du fichier vers lequel le lien pointe.
 };
 
+
+// Fonction utilitaire
 void string_zerofill(char * string, size_t size) {
     for (int i = 0; i < size, ++i) {
         string[i] = '\0';
@@ -51,28 +53,29 @@ void init_header(Header * header) {
     string_zerofill(header->linked_file_name, 100);
 }
 
-size_t BLOCK_TRIM = 512 - sizeof(Header);
+/// Le nombres d'octets vide dans le header.
+const size_t BLOCK_TRIM = 512 - sizeof(Header);
 
 /**
  * Récupère le contenu d'un header à partir d'un fichier.
  * @param file Le fichier à partir duquel est lu le header.
  * @param header Le header dans lequel écrire les données lues.
  */
-void read_header(FILE * file, Header * header) {
-    assert(file && header);
+void read_header(FILE * archive, Header * header) {
+    assert(archive && header);
 
-    fread(header->file_name, 1, 100, file);
-    fread(header->file_mode, 1, 8, file);
-    fread(header->owner_id, 1, 8, file);
-    fread(header->owner_group_id, 1, 8, file);
-    fread(header->file_size, 1, 12, file);
-    fread(header->last_modification, 1, 12, file);
-    fread(header->checksum, 1, 8, file);
-    fread(header->type_flag, 1, 1, file);
-    fread(header->linked_file_name, 1, 100, file);
+    fread(header->file_name, 1, 100, archive);
+    fread(header->file_mode, 1, 8, archive);
+    fread(header->owner_id, 1, 8, archive);
+    fread(header->owner_group_id, 1, 8, archive);
+    fread(header->file_size, 1, 12, archive);
+    fread(header->last_modification, 1, 12, archive);
+    fread(header->checksum, 1, 8, archive);
+    fread(header->type_flag, 1, 1, archive);
+    fread(header->linked_file_name, 1, 100, archive);
 
     // On saute les octets vides
-    fseek(file, BLOCK_TRIM, SEEK_CUR);
+    fseek(archive, BLOCK_TRIM, SEEK_CUR);
 }
 
 /**
@@ -80,18 +83,26 @@ void read_header(FILE * file, Header * header) {
  * @param file Le fichier dans lequel écrire.
  * @param header Le header à écrire dans le fichier.
  */
-void write_header(FILE * file, Header * header) {
-    assert(file && header);
+void write_header(FILE * archive, Header * header) {
+    assert(archive && header);
 
-    fwrite(header->file_name, 1, 100, file);
-    fwrite(header->file_mode, 1, 8, file);
-    fwrite(header->owner_id, 1, 8, file);
-    fwrite(header->owner_group_id, 1, 8, file);
-    fwrite(header->file_size, 1, 12, file);
-    fwrite(header->last_modification, 1, 12, file);
-    fwrite(header->checksum, 1, 8, file);
-    fwrite(header->type_flag, 1, 1, file);
-    fwrite(header->linked_file_name, 1, 100, file);
+    fwrite(header->file_name, 1, 100, archive);
+    fwrite(header->file_mode, 1, 8, archive);
+    fwrite(header->owner_id, 1, 8, archive);
+    fwrite(header->owner_group_id, 1, 8, archive);
+    fwrite(header->file_size, 1, 12, archive);
+    fwrite(header->last_modification, 1, 12, archive);
+    fwrite(header->checksum, 1, 8, archive);
+    fwrite(header->type_flag, 1, 1, archive);
+    fwrite(header->linked_file_name, 1, 100, archive);
 
-    // TODO: Remplir les octets restants de caractères nuls (\0)
+    // Remplit les octets restants de caractères nuls.
+    // TODO: Trouver une solution plus élégante
+    char null_char = '\0';
+    for (int i = 0; i < BLOCK_TRIM; ++i) {
+        fwrite(&null_char, 1, 1, archive);
+    }
+
+    // Je sais pas si c'est utile, mais dans le doute (^-^)
+    fflush(archive);
 }
