@@ -12,6 +12,8 @@
 
 typedef struct Header Header;
 
+void init_header(Header * header);
+
 void read_header(FILE * file, Header * header);
 void write_header(FILE * file, Header  * header);
 

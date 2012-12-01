@@ -10,7 +10,11 @@
  * utilisés étant remplis par des caractères nuls (\0).
  * Les champs sont des chaines de caractères ASCII finissant par un
  * caractère nul. Les valeurs numériques (file_size par exemple)
- * sont écrits en octal. Ainsi 1024 sera écrit: 2000.
+ * sont écrits en octal. Ainsi 1024 sera écrit: 2000. Les noms des
+ * entrées sont ecrits selon la structure suivante:
+ *  - dossier_racine/sous_dossier/.../dossier/ pour les dossiers.
+ *  - dossier_racine/sous_dossier/.../dossier/fichier pour un fichier.
+ *
  * @note Pour l'instant, on est pas obligé de traiter tous les champs.
  */
 struct Header {
@@ -25,6 +29,27 @@ struct Header {
     char linked_file_name[100] ///< Si le fichier est un lien, Le nom du fichier vers lequel le lien pointe.
 };
 
+void string_zerofill(char * string, size_t size) {
+    for (int i = 0; i < size, ++i) {
+        string[i] = '\0';
+    }
+}
+
+/**
+ * Initialise un header avec tous ces champs remplis de caractères nuls.
+ * @param header Le header à initialiser.
+ */
+void init_header(Header * header) {
+    string_zerofill(header->file_name, 100);
+    string_zerofill(header->file_mode, 8);
+    string_zerofill(header->owner_id, 8);
+    string_zerofill(header->owner_group_id, 8);
+    string_zerofill(header->file_size, 12);
+    string_zerofill(header->last_modification, 12);
+    string_zerofill(header->checksum, 8);
+    string_zerofill(header->type_flag, 1);
+    string_zerofill(header->linked_file_name, 100);
+}
 
 size_t BLOCK_TRIM = 512 - sizeof(Header);
 
@@ -54,7 +79,6 @@ void read_header(FILE * file, Header * header) {
  * Écrit le contenu d'un header dans un fichier.
  * @param file Le fichier dans lequel écrire.
  * @param header Le header à écrire dans le fichier.
- * @TODO Remplir l'espace restant de caractères nuls (\0)
  */
 void write_header(FILE * file, Header * header) {
     assert(file && header);
@@ -68,4 +92,6 @@ void write_header(FILE * file, Header * header) {
     fwrite(header->checksum, 1, 8, file);
     fwrite(header->type_flag, 1, 1, file);
     fwrite(header->linked_file_name, 1, 100, file);
+
+    // TODO: Remplir les octets restants de caractères nuls (\0)
 }
