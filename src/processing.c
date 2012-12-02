@@ -24,13 +24,18 @@ void write_directory(FILE * archive, char * directory_name) {
 
         // Écriture du header du dossier
         // TODO: ajouter des information supplémentaires au header.
-        Header header;
-        init_header(header);
-        header.file_name = directory_name;
-        header.type_flag = DIRECTORY_TYPE;
+        Header header = create_header(directory_name,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      DIRECTORY_TYPE,
+                                      NULL);
 
         printf("Écriture du header");
-        write_header(archive, &header);
+        write_header(archive, header);
 
         // Analyse des entrées du dossier.
         struct dirent *entry;

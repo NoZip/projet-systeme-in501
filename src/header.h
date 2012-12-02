@@ -2,6 +2,7 @@
 #define INCLUDE_HEADER_H
 
 #include <stdio.h>
+#include <sys/types.h>
 
 #define REGULAR_FILE_TYPE '0'
 #define HARD_LINK_TYPE '1'
@@ -10,36 +11,33 @@
 #define BLOCK_SPECIAL_TYPE '4'
 #define DIRECTORY_TYPE '5'
 
-/**
- * Représente un header tar POSIX.
- * Un header POSIX fait une taille de 512 octets, les octets non
- * utilisés étant remplis par des caractères nuls (\0).
- * Les champs sont des chaines de caractères ASCII finissant par un
- * caractère nul. Les valeurs numériques (file_size par exemple)
- * sont écrits en octal. Ainsi 1024 sera écrit: 2000. Les noms des
- * entrées sont ecrits selon la structure suivante:
- *  - "dossier_racine/sous_dossier/.../dossier/" pour les dossiers.
- *  - "dossier_racine/sous_dossier/.../dossier/fichier" pour un fichier.
- *
- * @note Pour l'instant, on est pas obligé de traiter tous les champs.
- */
-struct Header {
-    char file_name[100]; ///< Le nom de fichier.
-    char file_mode[8]; ///< Les droits du fichier.
-    char owner_id[8]; ///< L'id de l'utilisateur propriétaire.
-    char owner_group_id[8]; ///< L'id du groupe propriétaire.
-    char file_size[12]; ///< La taille du fichier (en octets).
-    char last_modification[12]; ///< Le timestamp UNIX de dernière modification
-    char checksum[8]; ///< La somme de contrôle du fichier.
-    char type_flag[1]; ///< Un drapeau permettant de déterminer le type du fichier.
-    char linked_file_name[100]; ///< Si le fichier est un lien, Le nom du fichier vers lequel le lien pointe.
-};
+typedef struct Header * Header;
 
-typedef struct Header Header;
+Header init_header(void);
 
-void init_header(Header * header);
+Header create_header(char * file_name,
+                     // mode_t file_mode,
+                     // uid_t owner_id,
+                     // gid_t owner_group_id,
+                     off_t file_size,
+                     time_t last_modification,
+                     // char * checksum,
+                     char type_flag,
+                     char * linked_file_name);
 
-void read_header(FILE * file, Header * header);
-void write_header(FILE * file, Header  * header);
+void destruct_header(Header header);
+
+char * header_file_name(Header header);
+// mod_t * header_file_mode(Header header);
+// uid_t * header_owner_id(Header header);
+// gid_t * header_owner_groud_id(Header header);
+off_t header_file_size(Header header);
+time_t header_last_modification(Header header);
+// char * header_checksum(Header header);
+char header_type_flag(Header header);
+char * header_linked_file_name(Header header);
+
+void read_header(FILE * file, Header header);
+void write_header(FILE * file, Header  header);
 
 #endif
