@@ -127,10 +127,12 @@ const size_t BLOCK_TRIM = 512 - sizeof(Header);
 /**
  * Récupère le contenu d'un header à partir d'un fichier.
  * @param file Le fichier à partir duquel est lu le header.
- * @param header Le header dans lequel écrire les données lues.
+ * @return Le header dans lequel ont été écrites les données lues.
  */
-void read_header(FILE * archive, Header header) {
-    assert(archive && header);
+Header read_header(FILE * archive) {
+    assert(archive);
+
+    Header header = init_header();
 
     fread(header->file_name, 1, 100, archive);
     fread(header->file_mode, 1, 8, archive);
@@ -144,6 +146,8 @@ void read_header(FILE * archive, Header header) {
 
     // On saute les octets vides
     fseek(archive, BLOCK_TRIM, SEEK_CUR);
+
+    return header;
 }
 
 /**

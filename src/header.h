@@ -37,7 +37,7 @@ time_t header_last_modification(Header header);
 char header_type_flag(Header header);
 char * header_linked_file_name(Header header);
 
-void read_header(FILE * file, Header header);
+Header read_header(FILE * file);
 void write_header(FILE * file, Header  header);
 
 #endif
