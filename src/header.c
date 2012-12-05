@@ -40,11 +40,11 @@ Header init_header(void) {
     assert(header);
 
     memset(header->file_name, '\0', 100);
-    memset(header->file_mode, '\0', 8);
-    memset(header->owner_id, '\0', 8);
-    memset(header->owner_group_id, '\0', 8);
-    memset(header->file_size, '\0', 12);
-    memset(header->last_modification, '\0', 12);
+    memset(header->file_mode, '0', 8);
+    memset(header->owner_id, '0', 8);
+    memset(header->owner_group_id, '0', 8);
+    memset(header->file_size, '0', 12);
+    memset(header->last_modification, '0', 12);
     memset(header->checksum, '\0', 8);
     memset(header->type_flag, '\0', 1);
     memset(header->linked_file_name, '\0', 100);
@@ -169,11 +169,9 @@ void write_header(FILE * archive, Header header) {
     fwrite(header->linked_file_name, 1, 100, archive);
 
     // Remplit les octets restants de caractères nuls.
-    // TODO: Trouver une solution plus élégante
-    char null_char = '\0';
-    for (int i = 0; i < BLOCK_TRIM; ++i) {
-        fwrite(&null_char, 1, 1, archive);
-    }
+    char trim[BLOCK_TRIM];
+    memset(trim, '\0', BLOCK_TRIM);
+    fwrite(&trim, sizeof(char), BLOCK_TRIM, archive);
 
     // Je sais pas si c'est utile, mais dans le doute (^-^)
     fflush(archive);

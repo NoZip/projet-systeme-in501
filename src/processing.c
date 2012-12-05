@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <time.h>
+#include <utime.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -157,6 +159,9 @@ void extract_file(FILE * archive, Header file_header) {
         bytes_written += n;
         if (VERBOSE) printf("%ld octets écrits\n", bytes_written);
     }
+
+    struct utimbuf file_times = {time(NULL), header_last_modification(file_header)};
+    utime(file_name, &file_times);
 
     if (VERBOSE) printf("Extraction de %s terminée.\n", file_name);
 
