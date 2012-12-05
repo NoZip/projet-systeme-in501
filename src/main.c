@@ -10,7 +10,7 @@
 
 int analyseOption(int argc, char* argv[]){
 
-	char archive;
+	char * archive = NULL;
 	bool c, r, u, x, t, z, f;
 	int compt;
 	int nb_param;
@@ -27,7 +27,7 @@ int analyseOption(int argc, char* argv[]){
 		switch(compt)
 		{
 		case 'h':
-			printf("Y'a pas d'aide, débrouille toi sans.");
+			//print_help();
 			break;
 		case 'v':
 			VERBOSE = true;
@@ -65,35 +65,29 @@ int analyseOption(int argc, char* argv[]){
 		nb_param+=1;
 	}
 
-	filename = argv[nb_param];
-	for(int i=nb_param+1; i<argc; i++){
-		strcat(filename, argv[i]);
-	}
-
-	if(c == true)
-		create(archive,filename);
 	if(x == true)
 		extract(archive);
 	if(t == true)
 		list(archive);
-	if(z == true)
-		return 1;
-	if(d == true)
-		return 1;
-	if(r == true){
-		if(u == true)
-			add(archive, filename, true);
-		else
-			add(archive, filename, false);
-	if(u == true)
-		add(archive, filename, true);
+
+	filename = argv[nb_param];
+	for(int i=nb_param+1; i<argc; i++){
+		strcat(filename, argv[i]);
 	}
-	return 1;
-}
+	if(c == true)
+		create(archive,filename);
+
+	if(r == true){
+		add(archive, filename, u);
+		if(u == true)
+			add(archive, filename, u);
+		if(z == true)
+			return 1;
+		return 1;
+	}
 
 
-int main(int argc, char* argv[]){
-
-	analyseOption(argc, argv);
-	return 1;
-}
+	int main(int argc, char* argv[]){
+		analyseOption(argc, argv);
+		return 1;
+	}
