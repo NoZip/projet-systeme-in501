@@ -10,5 +10,5 @@ all: tartiflette
 tartiflette: main.o main_functions.o processing.o header.o
 	$(CC) $(CFLAGS) $^ -o $@
 
-%.o: %.c
+%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
