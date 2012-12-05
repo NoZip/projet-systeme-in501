@@ -16,7 +16,7 @@ typedef struct Header * Header;
 Header init_header(void);
 
 Header create_header(char * file_name,
-                     // mode_t file_mode,
+                     mode_t file_mode,
                      // uid_t owner_id,
                      // gid_t owner_group_id,
                      off_t file_size,
@@ -28,7 +28,7 @@ Header create_header(char * file_name,
 void destruct_header(Header header);
 
 char * header_file_name(Header header);
-// mod_t * header_file_mode(Header header);
+mode_t header_file_mode(Header header);
 // uid_t * header_owner_id(Header header);
 // gid_t * header_owner_groud_id(Header header);
 off_t header_file_size(Header header);
