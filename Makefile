@@ -12,3 +12,6 @@ tartiflette: main.o main_functions.o processing.o header.o
 
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm *.o
