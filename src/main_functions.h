@@ -8,9 +8,9 @@
 #include "header.h"
 #include "processing.h"
 
-void create(FILE * archive, char * file_names[]);
-void extract(FILE * archive);
-void list(FILE * archive);
-void add(FILE * archive, char * file_names[], bool update);
+void create(char * archive, char * file_names[]);
+void extract(char * archive);
+void list(char * archive);
+void add(char * archive, char * file_names[], bool update);
 
 #endif
