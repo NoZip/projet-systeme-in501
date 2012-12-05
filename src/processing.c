@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 
@@ -18,14 +20,15 @@ bool VERBOSE = false;
  * @param directory_name Le chenim vers le dossier.
  *
  * @TODO peut être trouver un moyen d'éviter les appels récursifs.
+ * @TODO trouver un moyen d'utiliser DT_REG et DT_DIR au lieu de leurs
+ *       valeurs
  */
- /*
 void write_directory(FILE * archive, char * directory_name) {
     DIR * directory = opendir(directory_name);
 
     directory = opendir(directory_name);
     if (directory != NULL) {
-        printf("Entrée dans le dossier %s\n", directory_name);
+        if (VERBOSE) printf("Entrée dans le dossier %s\n", directory_name);
 
         // Écriture du header du dossier
         // TODO: ajouter des information supplémentaires au header.
@@ -35,30 +38,41 @@ void write_directory(FILE * archive, char * directory_name) {
                                       DIRECTORY_TYPE,
                                       NULL);
 
-        printf("Écriture du header");
+        if (VERBOSE) printf("Écriture du header");
         write_header(archive, header);
 
         // Analyse des entrées du dossier.
         struct dirent *entry;
         while ((entry = readdir(directory))) {
-            printf("Entrée %s du dossier %s\n", entry->d_name, directory_name);
+            if (strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0) {
+                if (VERBOSE) printf("Entrée %s du dossier %s\n", entry->d_name, directory_name);
 
-            if (entry->d_type == DT_REG) {
-                // Fichier normal
-                write_file(archive, entry->d_name);
-            }
-            else if (entry->d_type == DT_DIR) {
-                // Dossier
-                write_directory(archive, entry->d_name);
+                char path[100] = "";
+                strcpy(path, directory_name);
+                strcat(path, entry->d_name);
+
+                switch(entry->d_type) {
+                    case 8: //DT_REG
+                        // Fichier normal
+                        write_file(archive, path);
+                        break;
+
+                    case 4: //DT_DIR
+                        // Dossier
+                        strcat(path, "/");
+                        write_directory(archive, path);
+                        break;
+                }
             }
         }
+
+        if (VERBOSE) printf("Fin du traitement du dossier %s\n", directory_name);
     }
     else {
         fprintf(stderr, "Impossible d'ouvrir le dossier %s.\n", directory_name);
         exit(1);
     }
 }
-*/
 
 /**
  * Écrit un fichier dans l'archive.
@@ -68,6 +82,8 @@ void write_directory(FILE * archive, char * directory_name) {
  * @param verbose définit la verbosité de la sortie standard.
  */
 void write_file(FILE * archive, char * file_name) {
+    assert(archive);
+
     struct stat file_stats;
     if (stat(file_name, &file_stats) != 0) {
         fprintf(stderr, "Le fichier %s n'existe pas.\n", file_name);
@@ -122,6 +138,8 @@ void write_file(FILE * archive, char * file_name) {
  * @param file_header Le header correspondant au fichier à extraire.
  */
 void extract_file(FILE * archive, Header file_header) {
+    assert(archive);
+
     char * file_name = header_file_name(file_header);
     off_t file_size = header_file_size(file_header);
 
