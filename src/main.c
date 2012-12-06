@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
@@ -10,6 +11,7 @@
 
 void print_help(){
 	printf("Le programme \"tartiflette\" permet le stockage de different fichier ou dossier dans une seule et unique archive.\n");
+	printf("Usage : ./tartiflette [-options] [Nom du fichier à créé si option f] [nom des fichiers à inclure dans l'archive]\n");
 	printf("\n");
 	printf("Options possible:\n");
 	printf("	-h  Afficher la présente page d'aide.\n");
@@ -19,7 +21,7 @@ void print_help(){
 	printf("	-r  Rajouter des fichiers ou dossier à une archive existante.\n");
 	printf("	-u  Ajouter les fichiers plus récents que leurs copie déjà présente dans une archive existante.\n");
 	printf("	-x  Extraitre une archive existante.\n");
-	printf("	-f  Spécifier le nom de l'archive à utiliser.\n");
+	printf("	-f  Spécifier le nom de l'archive à utiliser, doit être la dernière option appelée.\n");
 	printf("	-z  Filtrer l'archive au travers de gzip.\n");
 	printf("	-d  Supprimer une archive existante.\n");
 	printf("\n");
@@ -28,7 +30,7 @@ void print_help(){
 int analyseOption(int argc, char* argv[]){
 
 	char * archive = NULL;
-	bool c = false , r = false, u = false, x = false, t = false, z = false;
+	bool o_create = false , o_add = false, o_maj = false, o_extract = false, o_list = false, o_zip = false;
 	int compt;
 	char** filename = NULL;
 
@@ -50,25 +52,25 @@ int analyseOption(int argc, char* argv[]){
 			VERBOSE = true;
 			break;
 		case 'c':
-			c = true;
+			o_create = true;
 			break;
 		case 't':
-			t = true;
+			o_list = true;
 			break;
 		case 'r':
-			r = true;
+			o_add = true;
 			break;
 		case 'u':
-			u = true;
+			o_maj = true;
 			break;
 		case 'x':
-			x = true;
+			o_extract = true;
 			break;
 		case 'f':
 			archive = optarg;
 			break;
 		case 'z':
-			z = true;
+			o_zip = true;
 			break;
 		case 'd':
 			/**suppr();*/
@@ -78,24 +80,26 @@ int analyseOption(int argc, char* argv[]){
 
 	filename = malloc(sizeof(char*)*(argc-optind));
 
-	if(x == true)
+	if(o_extract)
 		extract(archive);
-	if(t == true)
+	if(o_list)
 		list(archive);
 
 	filename[0] = argv[optind];
 	for(int i=optind+1; i<argc; i++){
 		strcat(filename[i-optind], argv[i]);
 	}
-	if(c == true)
+	if(o_create)
 		create(archive,filename);
 
-	if(r == true){
-		add(archive, filename, u);
-		if(u == true)
-			add(archive, filename, u);
-		if(z == true)
-			return 1;
+	if(o_add){
+		add(archive, filename, o_maj);
+		if(o_maj)
+			add(archive, filename, o_maj);
+	}
+	if(o_zip == true){
+		execlp("gzip", "gzip", archive, NULL);
+
 	}
 	return 1;
 }
