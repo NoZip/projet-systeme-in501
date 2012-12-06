@@ -11,6 +11,7 @@
 void create(char * archive, char * file_names[]);
 void extract(char * archive);
 void list(char * archive);
+Header * list_header(char * archive);
 void add(char * archive, char * file_names[], bool update);
 
 #endif
