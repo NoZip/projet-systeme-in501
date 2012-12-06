@@ -210,7 +210,7 @@ void extract_file(FILE * archive, Header file_header) {
     fclose(output_file);
 
     // Écriture des droits du fichier
-    chmod(file_name, header_file_mode(file_header));
+    //chmod(file_name, header_file_mode(file_header));
 
     // Écritures de la date de dernière modification dans le fichier
     struct utimbuf file_times = {time(NULL), header_last_modification(file_header)};

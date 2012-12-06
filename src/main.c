@@ -94,13 +94,10 @@ int analyseOption(int argc, char* argv[]){
 
 	if(o_add){
 		add(archive, filename, o_maj);
-		if(o_maj)
-			add(archive, filename, o_maj);
 	}
-	if(o_zip == true){
+	if(o_zip == true)
 		execlp("gzip", "gzip", archive, NULL);
 
-	}
 	return 1;
 }
 
