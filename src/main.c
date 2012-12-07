@@ -33,8 +33,8 @@ int analyseOption(int argc, char* argv[]){
 	bool o_create = false , o_add = false, o_maj = false, o_extract = false, o_list = false, o_zip = false;
 	int compt;
 	char** filename = NULL;
-
 	VERBOSE = false;
+
 	while(1){
 		compt = getopt(argc, argv, "hvctruxf:zd");
 
@@ -86,11 +86,14 @@ int analyseOption(int argc, char* argv[]){
 		list(archive);
 
 	filename[0] = argv[optind];
+
 	for(int i=optind+1; i<argc; i++){
-		strcat(filename[i-optind], argv[i]);
+		filename[i-optind]= argv[i];
 	}
-	if(o_create)
+
+	if(o_create){
 		create(archive,filename);
+	}
 
 	if(o_add){
 		add(archive, filename, o_maj);

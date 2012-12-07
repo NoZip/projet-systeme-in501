@@ -58,7 +58,6 @@ void write_directory(FILE * archive, char * directory_name) {
                                   NULL);
 
     if (VERBOSE) printf("Écriture du header");
-
     //Écriture du Header
     write_header(archive, header);
 

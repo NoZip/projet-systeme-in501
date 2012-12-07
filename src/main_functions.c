@@ -18,7 +18,7 @@
 void create(char * archive, char * file_names[]){
 	FILE * file;
 	int size = 0;
-	size = sizeof(file_names) / sizeof(char*);
+	size = sizeof(file_names) / sizeof(char*) + 1 ;
 
 	// Sélection de la sortie standard
 	if (archive == NULL)
@@ -29,11 +29,11 @@ void create(char * archive, char * file_names[]){
 		file = fopen(archive, "wb");
 	assert(file);
 	for(int i=0; i < size; i++){
+		if(file_names[i][strlen(file_names[i]+1)] == '/'){
 
-		if(file_names[i][strlen(file_names[i])] == '/')
 			// Répertoire
 			write_directory(file, file_names [i]);
-
+		}
 		else
 			// Fichier
 			write_file(file, file_names[i]);
