@@ -21,7 +21,7 @@ void create(char * archive, char * file_names[]){
 	int size = sizeof(file_names) / sizeof(char*);
 
 	// Sélection de la sortie standard
-	if (archive == NULL || strlen(archive) <= 0) {
+	if (archive == NULL) {
 		file = stdout;
 	}
 	// Ou ouvrerture du fichier tar
@@ -58,7 +58,7 @@ void extract(char * archive){
 
 	// Test fin du fichier
 	while(!feof(file)){
-		header = read_header(file);
+		Header header = read_header(file);
 
 		mode_t file_mode = header_file_mode(header);
 
@@ -92,15 +92,21 @@ void list(char * archive){
 
 	// Test fin du fichier
 	while(!feof(file)){
-		header = read_header(file);
+		Header header = read_header(file);
 
 		char * file_name = header_file_name(header);
 		mode_t file_mode = header_file_mode(header);
 		off_t file_size = header_file_size(header);
 
 		if (S_ISREG(file_mode)) {
-			printf("%s", file_name);
+			printf("%s\n", file_name);
 			fseek(file, file_size, SEEK_CUR);
+		}
+		else if (S_ISDIR(file_mode)) {
+			printf("%s\n", file_name);
+		}
+		else {
+			return;
 		}
 
 		destruct_header(header);
