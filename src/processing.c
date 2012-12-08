@@ -28,6 +28,13 @@ bool VERBOSE = false;
 void write_directory(FILE * archive, char * directory_name) {
     assert(archive);
 
+    if (strlen(directory_name) >= 100 ) {
+        fprintf(stderr,
+                "Le nom de dossier \"%s\" est trop long (%d caractères)\n",
+                directory_name,
+                strlen(directory_name));
+    }
+
     // On récupère les attributs du dossier.
     struct stat directory_stats;
     if (stat(directory_name, &directory_stats) != 0) {
@@ -35,18 +42,16 @@ void write_directory(FILE * archive, char * directory_name) {
         return;
     }
 
+    // Ouverture du répertoire
     DIR * directory = opendir(directory_name);
 
-    // Ouverture du répertoire
-    directory = opendir(directory_name);
-
-    // Traitement des érreurs d'ouverture
+    // Traitement des erreurs d'ouverture
     if (directory == NULL) {
         fprintf(stderr, "Impossible d'ouvrir le dossier %s.\n", directory_name);
         exit(1);
     }
 
-    if (VERBOSE) printf("Entrée dans le dossier %s\n", directory_name);
+    if (VERBOSE) printf("Écriture du dossier %s\n", directory_name);
 
     // Écriture du header du dossier
     // TODO: ajouter des information supplémentaires au header.
@@ -57,7 +62,7 @@ void write_directory(FILE * archive, char * directory_name) {
                                   DIRECTORY_TYPE,
                                   NULL);
 
-    if (VERBOSE) printf("Écriture du header");
+    if (VERBOSE) printf("--> Écriture du header\n");
     //Écriture du Header
     write_header(archive, header);
 
@@ -67,29 +72,30 @@ void write_directory(FILE * archive, char * directory_name) {
         // On ne traite pas les répertoires spéciaux pour éviter les
         // boucles infinies.
         if (strcmp(entry->d_name, "..") != 0 && strcmp(entry->d_name, ".") != 0) {
-            if (VERBOSE) printf("Entrée %s du dossier %s\n", entry->d_name, directory_name);
+            if (VERBOSE) printf("--> Entrée %s du dossier %s\n", entry->d_name, directory_name);
 
             // Construction du nom complet du fichier
             char path[100] = "";
             strcpy(path, directory_name);
             strcat(path, entry->d_name);
 
-            switch(entry->d_type) {
-                case 8: //DT_REG
-                    // Fichier normal
-                    write_file(archive, path);
-                    break;
+            struct stat file_stats;
+            if (stat(path, &file_stats) != 0) {
+                fprintf(stderr, "Le fichier %s n'existe pas.\n", path);
+                return;
+            }
 
-                case 4: //DT_DIR
-                    // Dossier
-                    strcat(path, "/");
-                    write_directory(archive, path);
-                    break;
+            if (S_ISREG(file_stats.st_mode)) {
+                // Fichier normal
+                write_file(archive, path);
+            }
+            else if (S_ISDIR(file_stats.st_mode)) {
+                // Dossier
+                strcat(path, "/");
+                write_directory(archive, path);
             }
         }
     }
-
-    if (VERBOSE) printf("Fin du traitement du dossier %s\n", directory_name);
 }
 
 /**
@@ -109,8 +115,6 @@ void extract_directory(FILE * archive, Header directory_header) {
     if (VERBOSE) printf("Extraction du dossier %s\n", directory_name);
     // On crée le dossier
     mkdir(directory_name, directory_mode);
-
-    if (VERBOSE) printf("Extraction de %s terminée\n", directory_name);
 }
 
 /**
@@ -122,6 +126,14 @@ void extract_directory(FILE * archive, Header directory_header) {
  */
 void write_file(FILE * archive, char * file_name) {
     assert(archive);
+
+    if (strlen(file_name) >= 100 ) {
+        fprintf(stderr,
+                "Le nom de fichier \"%s\" est trop long (%d caractères)\n",
+                file_name,
+                strlen(file_name));
+        exit(1);
+    }
 
     // On récupère les attributs du fichier.
     struct stat file_stats;
@@ -139,16 +151,20 @@ void write_file(FILE * archive, char * file_name) {
                                        REGULAR_FILE_TYPE,
                                        NULL);
 
-    if (VERBOSE) printf("Écriture du header\n");
+    if (VERBOSE) printf("--> Écriture du header\n");
 
     // Écriture du header
     write_header(archive, file_header);
 
     // Ouverture du fichier source
     FILE * input_file = fopen(file_name, "rb");
-    assert(input_file);
+    
+    if (input_file == NULL) {
+        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n", file_name);
+        exit(1);
+    }
 
-    if (VERBOSE) printf("Écriture des données du fichier (%ldo).\n", file_stats.st_size);
+    if (VERBOSE) printf("--> Écriture des données du fichier (%ldo).\n", file_stats.st_size);
 
     // Écriture des données dans le fichier
     long int bytes_written = 0;
@@ -163,10 +179,7 @@ void write_file(FILE * archive, char * file_name) {
         assert(n == fwrite(&buffer, sizeof(char), n, archive));
 
         bytes_written += n;
-        if (VERBOSE) printf("%ld octets écrits\n", bytes_written);
     }
-
-    if (VERBOSE) printf("Fin de l'écriture du fichier %s\n", file_name);
 
     fflush(archive);
 }
@@ -217,7 +230,6 @@ void extract_file(FILE * archive, Header file_header) {
         assert(n == fwrite(&buffer, sizeof(char), n, output_file));
 
         bytes_written += n;
-        if (VERBOSE) printf("%ld octets écrits\n", bytes_written);
     }
 
     fflush(output_file);
@@ -229,6 +241,4 @@ void extract_file(FILE * archive, Header file_header) {
     // Écritures de la date de dernière modification dans le fichier
     struct utimbuf file_times = {time(NULL), header_last_modification(file_header)};
     utime(file_name, &file_times);
-
-    if (VERBOSE) printf("Extraction de %s terminée.\n", file_name);
 }
