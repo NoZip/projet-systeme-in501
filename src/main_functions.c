@@ -18,28 +18,38 @@
 void create(char * archive, char * file_names[]){
 	FILE * file;
 	int size = 0;
-	size = sizeof(file_names) / sizeof(char*) + 1 ;
+	size = sizeof(file_names) / sizeof(char*);
+	printf("Nombre d'arguments: %d\n", size);
 
 	// Sélection de la sortie standard
-	if (archive == NULL)
+	if (archive == NULL) {
 		file = stdout;
-
+	}
 	// Ou ouvrerture du fichier tar
-	else
+	else {
 		file = fopen(archive, "wb");
-	assert(file);
+		assert(file);
+	}	
+	
 	for(int i=0; i < size; i++){
-		if(file_names[i][strlen(file_names[i]+1)] == '/'){
+		struct stat file_stats;
+    	if (stat(file_names[i], &file_stats) != 0) {
+        	fprintf(stderr, "Le fichier %s n'existe pas.\n", file_names[i]);
+        	exit(1);
+    	}
 
-			// Répertoire
-			write_directory(file, file_names [i]);
-		}
-		else
+		if (S_ISREG(file_stats.st_mode)) {
 			// Fichier
 			write_file(file, file_names[i]);
+		}
+		else if (S_ISDIR(file_stats.st_mode)) {
+			// Dossier
+			write_directory(file, file_names[i]);
+		}
 	}
+	
+	fflush(file);
 	fclose(file);
-
 }
 
 /**
@@ -56,8 +66,22 @@ void extract(char * archive){
 	// Test fin du fichier
 	while(!feof(file)){
 		header = read_header(file);
-		extract_file(file, header);
+		mode_t file_mode = header_file_mode(header);
+
+		if (S_ISREG(file_mode)) {
+			extract_file(file, header);
+		}
+		else if (S_ISDIR(file_mode)) {
+			extract_directory(file, header);
+		}
+		else {
+			// Arrivé en fin de fichier
+			return;
+		}
+
+		destruct_header(header);
 	}
+
 	fclose(file);
 }
 

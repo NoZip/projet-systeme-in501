@@ -106,8 +106,11 @@ void extract_directory(FILE * archive, Header directory_header) {
     char * directory_name = header_file_name(directory_header);
     mode_t directory_mode = header_file_mode(directory_header);
 
+    if (VERBOSE) printf("Extraction du dossier %s\n", directory_name);
     // On crée le dossier
     mkdir(directory_name, directory_mode);
+
+    if (VERBOSE) printf("Extraction de %s terminée\n", directory_name);
 }
 
 /**
@@ -187,7 +190,10 @@ void extract_file(FILE * archive, Header file_header) {
 
     // Ouverture du fichier de sortie
     FILE * output_file = fopen(file_name, "wb");
-    assert(output_file);
+    if (output_file == NULL) {
+        fprintf(stderr, "Impossible d'ouvrir le fichier %s\n", file_name);
+        exit(1);
+    }
 
     if (VERBOSE) printf("Extraction du fichier %s (%ldo)\n", file_name, file_size);
 
@@ -196,7 +202,15 @@ void extract_file(FILE * archive, Header file_header) {
     char buffer[1024];
     while(bytes_written < file_size) {
         // Lecture des données de l'archive
-        int n = fread(&buffer, sizeof(char), 1024, archive);
+        long int bytes_to_read = file_size - bytes_written;
+
+        int n = 0;
+        if (bytes_to_read > 1024) {
+            n = fread(&buffer, sizeof(char), 1024, archive);
+        }
+        else {
+            n = fread(&buffer, sizeof(char), bytes_to_read, archive);
+        }
 
         // Écriture des données dans le fichier destination
         // En vérifiant que les données lues et écrites sont identiques
@@ -206,6 +220,7 @@ void extract_file(FILE * archive, Header file_header) {
         if (VERBOSE) printf("%ld octets écrits\n", bytes_written);
     }
 
+    fflush(output_file);
     fclose(output_file);
 
     // Écriture des droits du fichier
@@ -216,6 +231,4 @@ void extract_file(FILE * archive, Header file_header) {
     utime(file_name, &file_times);
 
     if (VERBOSE) printf("Extraction de %s terminée.\n", file_name);
-
-    fflush(output_file);
 }

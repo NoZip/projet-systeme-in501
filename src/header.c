@@ -75,7 +75,7 @@ Header create_header(char * file_name,
     Header header = init_header();
 
     if (file_name) strcpy(header->file_name, file_name);
-    if (file_mode) sprintf(header->file_mode, "%lo", file_mode);
+    if (file_mode) sprintf(header->file_mode, "%o", file_mode);
     // if (owner_id) sprintf(header->owner_id, "%lo", owner_id);
     // if (owner_group_id) sprintf(header->owner_group_id, "%lo", owner_group_id);
     if (file_size) sprintf(header->file_size, "%lo", file_size);
@@ -97,7 +97,7 @@ char * header_file_name(Header header) {
 
 mode_t header_file_mode(Header header) {
     mode_t file_mode;
-    sscanf(header->file_mode, "%lo", &file_mode);
+    sscanf(header->file_mode, "%o", &file_mode);
     return file_mode;
 }
 // uid_t * header_owner_id(Header header);
