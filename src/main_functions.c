@@ -17,12 +17,11 @@
  */
 void create(char * archive, char * file_names[]){
 	FILE * file;
-	int size = 0;
-	size = sizeof(file_names) / sizeof(char*);
-	printf("Nombre d'arguments: %d\n", size);
+
+	int size = sizeof(file_names) / sizeof(char*);
 
 	// Sélection de la sortie standard
-	if (archive == NULL) {
+	if (archive == NULL || strlen(archive) <= 0) {
 		file = stdout;
 	}
 	// Ou ouvrerture du fichier tar
@@ -33,10 +32,6 @@ void create(char * archive, char * file_names[]){
 	
 	for(int i=0; i < size; i++){
 		struct stat file_stats;
-    	if (stat(file_names[i], &file_stats) != 0) {
-        	fprintf(stderr, "Le fichier %s n'existe pas.\n", file_names[i]);
-        	exit(1);
-    	}
 
 		if (S_ISREG(file_stats.st_mode)) {
 			// Fichier
@@ -57,8 +52,6 @@ void create(char * archive, char * file_names[]){
  * @param archive l'archive contenant les fichiers
  */
 void extract(char * archive){
-	Header header;
-
 	// Ouvrerture du fichier archive
 	FILE * file = fopen(archive, "rb");
 	assert(file);
@@ -66,6 +59,7 @@ void extract(char * archive){
 	// Test fin du fichier
 	while(!feof(file)){
 		header = read_header(file);
+
 		mode_t file_mode = header_file_mode(header);
 
 		if (S_ISREG(file_mode)) {
@@ -91,7 +85,6 @@ void extract(char * archive){
  */
 void list(char * archive){
 	FILE * file;
-	Header header;
 
 	// Ouverture du fichier archive
 	file = fopen(archive, "rb");
@@ -101,15 +94,18 @@ void list(char * archive){
 	while(!feof(file)){
 		header = read_header(file);
 
-		if(header_type_flag(header) == 5)
-			// Répertoire
-			printf("%s",header_file_name(header));
-		else{
-			// Fichier
-			printf("%s",header_file_name(header));
-			fseek(file, header_file_size(header), SEEK_CUR);
+		char * file_name = header_file_name(header);
+		mode_t file_mode = header_file_mode(header);
+		off_t file_size = header_file_size(header);
+
+		if (S_ISREG(file_mode)) {
+			printf("%s", file_name);
+			fseek(file, file_size, SEEK_CUR);
 		}
+
+		destruct_header(header);
 	}
+
 	fclose(file);
 }
 
